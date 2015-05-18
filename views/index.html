@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name ="viewport" content ="initial-scale=1, maximum-scale=1, minimum-scale=1" />
+    <title>新微信JS-SDK测试微信分享及相关API</title>
+</head>
+<body>
+<button id="addPic">添加图片</button>
+<button id="getLoc">获取位置</button>
+<ul id="picList"></ul>
+
+<script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+<script>
+    $.ajax({
+        url: 'http://yzlwechat.duapp.com/rsx/0/',//'http://yzlwechat.duapp.com/rsx/0/',
+        type: 'post',
+        data: {
+            url: location.href.split('#')[0] // 将当前URL地址上传至服务器用于产生数字签名
+        }
+    }).done(function(r){
+        // 返回了数字签名对象
+        console.log(r);
+        console.log(r.appid);
+        console.log(r.timestamp);
+        console.log(r.nonceStr);
+        console.log(r.signature);
+
+        // 开始配置微信JS-SDK
+        wx.config({
+            debug: true,
+            appId: r.appid,
+            timestamp: r.timestamp,
+            nonceStr: r.nonceStr,
+            signature: r.signature,
+            jsApiList: [
+                'checkJsApi',
+                'onMenuShareTimeline',
+                'onMenuShareAppMessage',
+                'onMenuShareQQ',
+                'onMenuShareWeibo',
+                'hideMenuItems',
+                'chooseImage'
+            ]
+        });
+
+        // 调用微信API
+        wx.ready(function(){
+            var sdata = {
+                title: '测试测试微信分享及相关API',
+                desc: '测试测试微信分享及相关API',
+                link: 'https://shop.yzlpie.com/yzlshop',
+                imgUrl: 'https://shop.yzlpie.com/yzlshop/app/images/yzl_logo.png',
+                success: function () {
+                    alert('用户确认分享后执行的回调函数');
+                },
+                cancel: function () {
+                    alert('用户取消分享后执行的回调函数');
+                }
+            };
+            wx.onMenuShareTimeline(sdata);
+            wx.onMenuShareAppMessage(sdata);
+            // 添加图片
+            $('#addPic').on('click', function(){
+                wx.chooseImage({
+                    success: function (res) {
+                        var localIds = res.localIds; // 返回选定照片的本地ID列表，localId可以作为img标签的src属性显示图片
+                        // var imgs = localIds.split(',');
+                        localIds.forEach(function(v, i){
+                            alert(v);
+                            $('#picList').append('<li><img src="'+ v +'" alt="" width="50"></li>');
+                        });
+                    }
+                });
+            });
+            $('#getLoc').click(function(e){
+                wx.getLocation({
+                    success : function(){
+                        var latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+                        var longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+                        var speed = res.speed; // 速度，以米/每秒计
+                        var accuracy = res.accuracy; // 位置精度
+                        alert('location'+'纬度:'+latitude+',经度：'+longitude);
+                    }
+                });
+            });
+        });
+    });
+</script>
+</body>
+</html>
